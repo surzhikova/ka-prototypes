@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pandy's Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: fixed 1280x720 stage in the Kids Area visual language; the story is a two-page book (picture left, text right); reviewer notes rail on the right */
+  --bg:#4b32c3;
+  --ink:#24135f;
+  --outline:#111;
+  --green:#5bb544;
+  --star:#f9cf3a;
+  --paper:#fffaf0;
+  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --button:"Lilita One","Fredoka",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:#170f33;color:#efe9fb;font-family:var(--body);display:flex;flex-direction:column;overflow:hidden}
+button{font-family:inherit}
+:focus-visible{outline:4px solid #ffe066;outline-offset:3px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 20px;border-bottom:1px solid #2e2452}
+.t-name{display:flex;flex-direction:column}
+.t-name b{font:700 20px var(--display);line-height:1.1}
+.t-name span{font-size:13px;color:#b3a8d6}
+.t-act{display:flex;gap:8px;align-items:center}
+.t-hint{font-size:13px;color:#b3a8d6;margin-right:6px}
+.tbtn{background:#2a2050;color:#efe9fb;border:1px solid #463a75;border-radius:999px;padding:7px 14px;font:700 14px var(--body);cursor:pointer}
+.tbtn[aria-pressed="true"]{background:#463a75}
+main{flex:1;display:flex;min-height:0}
+#stageWrap{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+#stageBox{position:relative;flex:none}
+.notes{width:330px;flex:none;overflow:auto;background:#211843;border-left:1px solid #2e2452;padding:20px 22px;font-size:14.5px;line-height:1.5}
+.notes.hidden{display:none}
+.n-k{font:800 11.5px var(--body);text-transform:uppercase;letter-spacing:.09em;color:#a598cf;margin-top:4px}
+.notes h4{font:700 22px var(--display);margin:4px 0 8px;line-height:1.15;text-wrap:balance}
+.notes ul{margin:0 0 18px;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.jumps{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 18px}
+.jumps button{background:#2a2050;color:#efe9fb;border:1px solid #463a75;border-radius:999px;padding:6px 12px;font:700 13px var(--body);cursor:pointer}
+.jumps button.on{background:var(--green);border-color:var(--green);color:#fff}
+.n-foot{font-size:13px;color:#a598cf;margin:0}
+@media (max-width:899px){body{overflow:auto;height:auto;min-height:100%}main{flex-direction:column}#stageWrap{flex:none;padding:8px}.notes{width:auto;border-left:0;border-top:1px solid #2e2452}}
+
+.stage{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:hidden;border-radius:24px;transform-origin:0 0;color:var(--ink);font-family:var(--display);user-select:none;-webkit-user-select:none;background:var(--bg)}
+#view{position:absolute;inset:0}
+.scr{position:absolute;inset:0}
+.purple{background:linear-gradient(118deg,#4428b8 0 22%,transparent 22%),radial-gradient(ellipse 60% 80% at 100% 100%,#3d24ad 0 60%,transparent 61%),radial-gradient(ellipse 45% 60% at 18% 105%,#5a40d6 0 60%,transparent 61%),var(--bg)}
+.lilac{background:linear-gradient(#cdc4fa,#ece8fe)}
+.burst{background:repeating-conic-gradient(from 0deg at 50% 45%,#d9d2fb 0 7deg,#cfc6fa 7deg 14deg)}
+
+.back{position:absolute;left:28px;top:20px;width:64px;height:64px;border-radius:50%;background:#a58cf5;border:4px solid var(--outline);box-shadow:0 4px 0 rgba(0,0,0,.35);display:grid;place-items:center;cursor:pointer;padding:0;z-index:5}
+.btn{font:400 20px var(--button);letter-spacing:.03em;text-transform:uppercase;color:#fff;background:var(--green);border:3px solid var(--outline);border-radius:12px;padding:7px 22px;box-shadow:0 4px 0 var(--outline);cursor:pointer;-webkit-text-stroke:1px var(--outline);paint-order:stroke fill}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--outline)}
+.btn.alt{background:#efe9ff;color:var(--ink);-webkit-text-stroke:0}
+.btn.purple{background:#a45ae6}
+.btn.gold{background:var(--star);color:var(--ink);-webkit-text-stroke:0}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.answer{position:absolute;right:36px;bottom:26px;min-width:280px;height:70px;padding:0 24px;font:400 28px var(--button);color:#fff;-webkit-text-stroke:1.6px #1d3b18;paint-order:stroke fill;background:linear-gradient(#cfeccb 0 18%,#8fd884 18% 82%,#78bf6e 82%);border:3px solid var(--outline);border-radius:8px;transform:skewX(-6deg);cursor:pointer}
+.answer:disabled{filter:saturate(.35);opacity:.6;cursor:not-allowed}
+.pandy{flex:none;width:56px;height:56px;border-radius:50%;border:3px dashed #b7a6da;background:rgba(255,255,255,.5);display:grid;place-items:center;font:600 12px var(--display);color:#6b5f93}
+.purple .pandy{border-color:#d7c9ff;background:rgba(255,255,255,.18);color:#fff}
+.ph{border:3px dashed rgba(255,255,255,.85);border-radius:50%;display:grid;place-items:center;font:600 12px var(--display);color:#fff;text-align:center;line-height:1.1}
+.bubble{background:#fff;border:3px solid var(--outline);border-radius:18px;padding:8px 18px;font:600 21px var(--display);color:var(--ink);box-shadow:0 4px 0 var(--outline)}
+.bubble small{display:block;font:500 15px var(--display);color:#6b5f93}
+.spk-btn{flex:none;width:58px;height:58px;border-radius:50%;background:var(--star);border:3px solid var(--outline);box-shadow:0 4px 0 var(--outline);display:grid;place-items:center;cursor:pointer;padding:0}
+
+/* home */
+.hud-r{position:absolute;right:28px;top:20px;display:flex;align-items:center;gap:14px}
+.icon{position:relative;width:62px;height:60px;display:grid;place-items:center}
+.icon svg{position:absolute;inset:0;width:100%;height:100%}
+.icon b{position:relative;font:400 22px var(--button);color:#fff;-webkit-text-stroke:1.3px var(--outline);paint-order:stroke fill;margin-top:4px}
+.who{display:flex;align-items:center}
+.who .nm{background:#fff;border-radius:14px 0 0 14px;padding:8px 26px 8px 18px;font:700 26px var(--display);color:#111;margin-right:-18px}
+.who .av{width:64px;height:64px;border-radius:50%;background:#2c4a7a;border:4px solid #1d3355;position:relative}
+.who .av::after{content:"avatar";position:absolute;inset:0;display:grid;place-items:center;font:600 11px var(--display);color:#cfe0ff}
+.mcards{position:absolute;left:56px;right:56px;top:150px;display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.nb{position:relative;background:#fff;border-radius:22px;box-shadow:0 8px 0 rgba(28,16,70,.45)}
+.nb::before{content:"";position:absolute;left:-10px;top:26px;bottom:26px;width:20px;background:radial-gradient(circle at 50% 50%,#3a22a6 7px,transparent 8px) 0 0/20px 38px repeat-y}
+.mcard{height:420px;padding:18px 20px 18px 30px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.mcard.hot{outline:5px solid var(--star);outline-offset:4px}
+.m-top{align-self:stretch;display:flex;justify-content:space-between;align-items:center}
+.tag{font:600 19px var(--display);color:#fff;padding:3px 14px;border-radius:999px}
+.tag.pd{background:#e0457b}.tag.hw{background:#4caf3c}.tag.gm{background:#f07f2e}
+.newb{background:#e0457b;color:#fff;font:400 16px var(--button);padding:3px 10px;border-radius:999px;border:2px solid var(--outline);animation:pulse 1.6s ease-in-out infinite}
+.m-img{align-self:stretch;height:170px;border-radius:12px;background:#b49af5;display:grid;place-items:center;font-size:96px}
+.m-img .ph{width:100px;height:100px;font-size:12px}
+.m-title{font:700 26px var(--display);text-align:center;line-height:1.1;color:var(--ink)}
+.m-sub{font:500 15px var(--display);color:#6b5f93;text-align:center;margin-top:-6px}
+.mcard .btn{margin-top:auto}
+.done-lbl{margin-top:auto;display:flex;align-items:center;gap:8px;font:400 24px var(--button);color:#4caf3c}
+.done-lbl i{width:38px;height:38px;border-radius:50%;background:#4caf3c;display:grid;place-items:center}
+.done-lbl svg{width:22px;height:22px}
+.shelf{position:absolute;left:56px;top:620px;display:flex;align-items:center;gap:12px;font:600 18px var(--display);color:#fff}
+.shelf .bk{width:46px;height:58px;border-radius:6px 10px 10px 6px;background:#ffd25e;border:3px solid var(--outline);display:grid;place-items:center;font-size:24px}
+
+/* choose */
+.h1{position:absolute;top:28px;left:0;right:0;text-align:center;font:700 34px var(--display);color:var(--ink)}
+.steps{position:absolute;top:78px;left:0;right:0;display:flex;justify-content:center;gap:8px}
+.steps span{font:600 15px var(--display);padding:3px 12px;border-radius:999px;background:rgba(255,255,255,.6);color:#6b5f93}
+.steps span.on{background:#6e5af2;color:#fff}
+.steps span.done{background:#bdf0b5;color:#2f6a24}
+.ask{position:absolute;left:160px;right:160px;top:118px;display:flex;gap:12px;align-items:center}
+.ask .bubble{flex:1}
+.choices{position:absolute;top:220px;left:0;right:0;display:flex;justify-content:center;gap:22px;flex-wrap:wrap;padding:0 80px}
+.ch{width:150px;height:170px;border-radius:22px;background:#fff;border:5px solid var(--outline);box-shadow:0 7px 0 var(--outline);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0}
+.ch .em{font-size:84px;line-height:1}
+.ch b{font:700 22px var(--display);color:var(--ink)}
+.ch.sel{background:#e4f6e7;outline:6px solid #6e5af2;outline-offset:3px}
+.ch.sel.no{background:#ffe4e1}
+.ch:disabled{opacity:.35;cursor:not-allowed}
+.preview{position:absolute;left:160px;right:340px;top:470px;min-height:120px;background:#fff;border:4px solid var(--outline);border-radius:20px;padding:12px 18px;display:flex;align-items:center;gap:18px}
+.preview .hero{font-size:72px}
+.preview p{margin:0;font:600 24px var(--display);line-height:1.35}
+.preview p em{font-style:normal;color:#9a8fbf}
+.preview mark{background:#fff1a8;border-radius:6px;padding:0 4px}
+
+/* writing */
+.writing{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.writing .book{font-size:140px;animation:pulse 1s ease-in-out infinite}
+.writing b{font:400 44px var(--button);color:#fff;-webkit-text-stroke:3px #0b1a22;paint-order:stroke fill}
+.writing small{font:500 18px var(--display);color:#5b4fa0}
+
+/* story */
+.s-title{position:absolute;top:24px;left:0;right:0;text-align:center;font:700 36px var(--display);color:#fff}
+.page{position:absolute;top:92px;bottom:24px;background:var(--paper);border:5px solid var(--outline);box-shadow:0 8px 0 rgba(28,16,70,.5)}
+.page.l{left:36px;width:604px;border-radius:24px 6px 6px 24px;padding:16px}
+.page.r{left:640px;right:36px;border-radius:6px 24px 24px 6px;padding:22px 26px;border-left-width:2px}
+.illu{border-radius:14px;overflow:hidden;border:3px solid var(--outline)}
+.s-tray{display:flex;justify-content:center;gap:14px;margin-top:14px}
+.stk{width:92px;height:92px;border-radius:18px;background:#ffe58a;border:4px solid var(--outline);box-shadow:0 5px 0 var(--outline);display:grid;place-items:center;font-size:58px;cursor:grab;touch-action:none;padding:0}
+.stk.used{visibility:hidden}
+.stk.hint{outline:5px dashed #ff8a00;animation:wiggle .6s ease-in-out infinite}
+.stk.bad{animation:shake .45s}
+.stk.lifting{opacity:.35}
+.s-help{display:flex;gap:10px;align-items:center;margin-top:14px}
+.s-help .bubble{flex:1;font-size:18px;padding:6px 14px}
+.s-help .fb.good{color:#2f8a1f}.s-help .fb.bad{color:#c2410c}
+.sent{font:600 21px var(--display);line-height:1.35;margin:0 0 6px;padding:3px 10px;border-radius:12px;color:#b7aed6;transition:background .3s,color .3s}
+.sent.read{color:var(--ink)}
+.sent.cur{color:var(--ink);background:#fff1a8}
+.gap{display:inline-flex;align-items:center;justify-content:center;min-width:110px;height:50px;vertical-align:middle;border:3px dashed #8a7bd0;border-radius:12px;background:#f3efff;margin:0 4px}
+.gap.cur{border-color:#6e5af2;background:#e6e0ff;animation:pulse 1.2s ease-in-out infinite}
+.gap.filled{border:0;background:none;min-width:0;gap:6px;color:#2f8a1f;font-weight:700}
+.gap.filled i{font-style:normal;font-size:34px}
+.quiz{margin-top:6px;background:#f3efff;border-radius:18px;padding:14px 16px}
+.quiz h5{margin:0 0 10px;font:700 24px var(--display)}
+.quiz .row{display:flex;gap:14px}
+.qopt{width:110px;height:110px;border-radius:18px;background:#fff;border:4px solid var(--outline);box-shadow:0 5px 0 var(--outline);font-size:64px;cursor:pointer;padding:0}
+.qopt.ok{background:#bdf0b5}.qopt.bad{background:#ffb4ad;animation:shake .45s}
+.mic{width:96px;height:96px;border-radius:50%;background:#ee6a63;border:6px solid #7a62e8;box-shadow:0 0 0 4px var(--outline);display:grid;place-items:center;cursor:pointer;padding:0;flex:none}
+.mic.on{animation:pulse .8s ease-in-out infinite}
+.speak{display:flex;gap:18px;align-items:center}
+.speak p{margin:0;font:600 22px var(--display)}
+.speak small{display:block;font:500 14px var(--display);color:#6b5f93}
+.ghost{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%) scale(1.15);filter:drop-shadow(0 10px 10px rgba(0,0,0,.3));line-height:1}
+
+/* end */
+.e-stars{position:absolute;top:40px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:12px}
+.e-stars b{font:400 70px var(--button);color:#ffe94d;-webkit-text-stroke:3px #0b1a22;paint-order:stroke fill}
+.e-stars svg{width:76px;height:72px;transform:rotate(12deg)}
+.e-title{position:absolute;top:118px;left:0;right:0;text-align:center;font:400 84px var(--button);color:#fff;-webkit-text-stroke:5px #0b1a22;paint-order:stroke fill}
+.cover{position:absolute;left:150px;top:236px;width:500px;background:var(--paper);border:5px solid var(--outline);border-radius:10px 22px 22px 10px;box-shadow:0 8px 0 rgba(0,0,0,.25);padding:14px;border-left:16px solid #a45ae6}
+.cover h3{margin:8px 4px 0;font:700 28px var(--display)}
+.cover small{display:block;margin:0 4px;font:500 15px var(--display);color:#6b5f93}
+.e-acts{position:absolute;left:700px;top:246px;width:420px;display:flex;flex-direction:column;gap:12px}
+.e-acts .btn{text-align:left;font-size:19px}
+.e-acts .lnk{background:none;border:0;color:var(--ink);font:600 16px var(--display);text-decoration:underline;cursor:pointer;text-align:left;padding:2px}
+
+/* scene */
+.stall{position:relative;width:100%;aspect-ratio:880/506;container-type:inline-size;overflow:hidden;background:linear-gradient(#fff1d9,#ffdcab)}
+.st-awning{position:absolute;left:0;right:0;top:0;height:15%;background:repeating-linear-gradient(90deg,#e8424f 0 6.25%,#fff6e6 6.25% 12.5%)}
+.st-awning::after{content:"";position:absolute;left:0;right:0;top:100%;height:3cqw;background:radial-gradient(circle at 50% 0,#e8424f 1.55cqw,transparent 1.6cqw) 0 0/6.25% 100% repeat-x}
+.st-sign{position:absolute;top:21%;left:50%;transform:translateX(-50%);background:#6b3b22;color:#ffe9c7;font:700 2.6cqw var(--display);padding:.3cqw 2.2cqw;border-radius:1cqw;white-space:nowrap}
+.st-table{position:absolute;left:30%;width:46%;top:56%;height:5%;background:#9a5b34;border-radius:.8cqw;box-shadow:0 .6cqw 0 #7a4426}
+.st-table i{position:absolute;top:100%;width:2.2cqw;height:620%;background:#7a4426}
+.st-table .l{left:5%}.st-table .r{right:5%}
+.st-basket{position:absolute;right:2%;top:62%;width:18%;height:30%;border-radius:0 0 3cqw 3cqw;border-top:.9cqw solid #8d87a3;background:repeating-linear-gradient(45deg,#cfcadd 0 1.2cqw,#bfb9d0 1.2cqw 2.4cqw)}
+.st-basket span{position:absolute;left:50%;top:-2.2cqw;transform:translateX(-50%);background:#fff;border-radius:2cqw;padding:.2cqw 1.2cqw;font:600 2cqw var(--display);white-space:nowrap;color:var(--ink)}
+.st-floor{position:absolute;left:0;right:0;bottom:0;height:8%;background:repeating-linear-gradient(90deg,#c58b52 0 10%,#b77c45 10% 10.4%)}
+.item{position:absolute;transform:translate(-50%,-50%);font-size:8cqw;line-height:1;z-index:3;filter:drop-shadow(0 .3cqw .2cqw rgba(60,30,10,.3))}
+.item.hero{font-size:16cqw;z-index:4}
+.item.pop{animation:pop .6s cubic-bezier(.3,1.6,.5,1) backwards}
+
+.item.hat{z-index:5}
+.item.hatmove{animation:hatmove .9s cubic-bezier(.3,1.4,.5,1) backwards}
+.item.crunch{animation:crunch 1.2s ease-in forwards}
+.item.fly{animation:fly 1.3s ease-in forwards}
+.item.guest{font-size:12cqw}
+.item.bounce{animation:bounce .6s ease-in-out infinite alternate}
+.btxt{position:absolute;transform:translate(-50%,-50%);font:400 5cqw var(--button);color:#fff;-webkit-text-stroke:.5cqw #111;paint-order:stroke fill;z-index:6;animation:btxt 1.4s ease-out forwards;white-space:nowrap}
+.cbtns{display:flex;gap:12px;margin-top:8px}
+.cbtn{display:flex;align-items:center;gap:8px;background:#fff;border:4px solid #111;border-radius:16px;box-shadow:0 4px 0 #111;padding:4px 16px 4px 10px;font:700 22px var(--display);color:var(--ink);cursor:pointer}
+.cbtn span{font-size:42px;line-height:1}
+@keyframes hatmove{from{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(-180deg)}}
+@keyframes crunch{30%{transform:translate(-50%,-50%) scale(1.25) rotate(10deg)}100%{transform:translate(-50%,-50%) scale(0);opacity:0}}
+@keyframes fly{to{transform:translate(-50%,-650%) rotate(260deg);opacity:0}}
+@keyframes bounce{to{transform:translate(-50%,-62%)}}
+@keyframes btxt{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}25%{transform:translate(-50%,-50%) scale(1.2);opacity:1}80%{opacity:1}100%{transform:translate(-50%,-75%);opacity:0}}
+
+/* modals */
+.modal-bg{position:absolute;inset:0;background:rgba(20,10,55,.6);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal{background:#fff;border-radius:26px;width:1040px;max-height:660px;overflow:auto;padding:26px 32px;position:relative;border:4px solid var(--outline);color:var(--ink)}
+.modal h3{font:700 30px var(--display);margin:0}
+.modal .sub{margin:0;color:#7c6fae;font:500 16px var(--display)}
+.modal .x{position:absolute;right:18px;top:16px;font-size:16px;padding:5px 14px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.flow div{background:#f3efff;border-radius:16px;padding:12px 14px;font:500 14.5px var(--display);line-height:1.4}
+.flow b{display:block;font:700 17px var(--display);margin-bottom:4px}
+.flow div.live{background:#fff6e5}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.cols div{background:#f7f5fd;border-radius:16px;padding:12px 14px}
+.cols h5{margin:0 0 4px;font:700 17px var(--display)}
+.cols ul{margin:4px 0;padding-left:18px;font:500 14px var(--display);line-height:1.45}
+.cols li.err{color:#b4441a}
+.pm-grid{display:grid;grid-template-columns:440px 1fr;gap:24px;margin-top:16px;align-items:start}
+.pm-facts > div{display:flex;flex-direction:column;padding:8px 0;border-bottom:1px solid #eee6f5}
+.pm-facts b{font:600 12.5px var(--display);text-transform:uppercase;letter-spacing:.07em;color:#7c6fae}
+.pm-facts span{font:500 17px var(--display)}
+.toast{position:absolute;left:50%;top:96px;transform:translateX(-50%);background:var(--outline);color:#fff;padding:12px 22px;border-radius:999px;font:600 18px var(--display);z-index:60;animation:toast 2.6s both;white-space:nowrap}
+.cf{position:absolute;top:-24px;width:12px;height:18px;border-radius:3px;z-index:40;animation:fall 2.6s ease-in forwards}
+@keyframes pulse{50%{transform:scale(1.06)}}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg)}}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(0)}}
+@keyframes fall{to{transform:translateY(790px) rotate(720deg)}}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-12px)}10%,86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="t-name"><b>Pandy's Story</b><span>Kids Area · alternative concept · a story built from the child's own words · clickable prototype</span></div>
+  <div class="t-act"><span class="t-hint">Sound on for voice</span><button id="notesBtn" class="tbtn" aria-pressed="true">Reviewer notes</button><button id="restart" class="tbtn">Restart</button></div>
+</header>
+<main>
+  <div id="stageWrap"><div id="stageBox"><div id="stage" class="stage"><div id="view"></div></div></div></div>
+  <aside id="notes" class="notes" aria-label="Reviewer notes"></aside>
+</main>
+<script>
+const W={apple:'🍎',pumpkin:'🎃',carrot:'🥕',corn:'🌽',grapes:'🍇',pear:'🍐'};
+const BANK=['apple','pumpkin','carrot','corn','grapes','pear'];
+const PL={apple:'apples',pumpkin:'pumpkins',carrot:'carrots',corn:'corn',grapes:'grapes',pear:'pears'};
+const HEROES=[{id:'Fox',e:'🦊'},{id:'Bear',e:'🐻'},{id:'Bunny',e:'🐰'}];
+const TEMPLATES=[
+  {title:"{H}'s party",sents:[
+    {t:'{H} has a party today! {H} goes to the market.'},
+    {t:'{H} likes {1}!',g:1},
+    {t:'{H} likes {2} too. Yum!',g:2},
+    {t:'Oh no! {H} sees {3}. {H} doesn\'t like {3t}!',g:3},
+    {choice:'Who comes to the party?'},
+    {out:{Bunny:{t:'Bunny likes {3t}! Crunch, crunch, crunch!',fx:'crunch'},Bird:{t:'Bird takes the {3t}. Whoosh! Up, up and away!',fx:'whoosh'}}},
+    {t:'Now everyone is happy. The end!',fx:'party'}]},
+  {title:'{H} and the big wind',sents:[
+    {t:'{H} goes to the market. The wind is very strong today!'},
+    {t:'{H} likes {1}!',g:1},
+    {t:'Whoosh! The wind blows the {1t} onto {H}\'s head!',fx:'hat'},
+    {t:'{H} likes {2} too. Yum!',g:2},
+    {t:'But {H} doesn\'t like {3}.',g:3},
+    {choice:'Who helps {H}?'},
+    {out:{Bunny:{t:'Bunny eats the {3t}. Crunch, crunch, crunch!',fx:'crunch'},Bird:{t:'Bird takes the {3t} away. Whoosh!',fx:'whoosh'}}},
+    {t:'{H} goes home with a funny hat. The end!',fx:'party'}]}
+];
+const GUESTS={Bunny:'🐰',Bird:'🐦'};
+const O='#111';
+const CHEV=`<svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><path d="M30 8 12 24l18 16" stroke="${O}" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 8 12 24l18 16" stroke="#fff" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SPK2=`<svg viewBox="0 0 24 24" width="56%" height="56%" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#111"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`;
+const MIC=`<svg viewBox="0 0 24 24" width="50" height="50" aria-hidden="true"><rect x="8.5" y="3" width="7" height="12" rx="3.5" fill="#fff" stroke="${O}" stroke-width="1.4"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`;
+const STAR=`<svg viewBox="0 0 50 48" aria-hidden="true"><path d="M25 3l6.8 14 15.4 2.2-11.1 10.8 2.6 15.3L25 38l-13.7 7.3 2.6-15.3L2.8 19.2 18.2 17z" fill="#f9cf3a" stroke="${O}" stroke-width="3" stroke-linejoin="round"/></svg>`;
+const HEART=`<svg viewBox="0 0 48 44" aria-hidden="true"><path d="M24 40S4 28.5 4 15A10 10 0 0 1 24 10a10 10 0 0 1 20 5c0 13.5-20 25-20 25z" fill="#d65ce6" stroke="${O}" stroke-width="3" stroke-linejoin="round"/></svg>`;
+const SHOP=`<svg viewBox="0 0 60 58" aria-hidden="true"><rect x="8" y="22" width="44" height="32" rx="5" fill="#fff" stroke="${O}" stroke-width="3"/><path d="M5 22 10 6h40l5 16z" fill="#e8424f" stroke="${O}" stroke-width="3" stroke-linejoin="round"/><path d="M20 6l-3 16M30 6v16M40 6l3 16" stroke="#fff" stroke-width="4"/></svg>`;
+const CHECK=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function fresh(){return{screen:'home',stars:910,stories:[],pick:{hero:null,likes:[],no:null,step:0},story:null,events:[]};}
+let S=fresh(),scale=1,pend=null,timers=[];
+const $=s=>document.querySelector(s);
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const clearT=()=>{timers.forEach(clearTimeout);timers=[];};
+const later=(f,ms)=>timers.push(setTimeout(f,ms));
+let voice=null;function pickVoice(){try{const v=speechSynthesis.getVoices();voice=v.find(x=>x.lang==='en-GB')||v.find(x=>/^en/.test(x.lang))||null;}catch(e){}}
+try{pickVoice();speechSynthesis.addEventListener('voiceschanged',pickVoice);}catch(e){}
+function say(t){try{const s=speechSynthesis;s.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[“”]/g,''));u.lang='en-GB';u.rate=.82;u.pitch=1.1;if(voice)u.voice=voice;s.speak(u);}catch(e){}}
+const dur=t=>900+t.length*68;
+let ac=null;function tone(type){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();const t0=ac.currentTime;
+ const blip=(f,t,d,wave='sine',v=.14,f2)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=wave;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02);};
+ if(type==='crunch'){[0,.16,.32].forEach(d=>blip(150,t0+d,.09,'square',.07));return;}
+ if(type==='whoosh'){blip(900,t0,.55,'sine',.12,160);return;}
+ const seq=type==='ok'?[660,880]:type==='bad'?[320,240]:[523,659,784,1047];seq.forEach((f,i)=>blip(f,t0+i*.11,.22));}catch(e){}}
+
+/* story text */
+function words(st){return {1:st.likes[0],2:st.likes[1],3:st.no};}
+function fill(st,txt){const w=words(st);return txt.replace(/\{H\}/g,st.hero.id).replace(/\{(\d)t?\}/g,(m,n)=>PL[w[n]]);}
+function plain(st,s){if(s.choice)return fill(st,s.choice);if(s.out)return st.guest?fill(st,s.out[st.guest].t):'';return fill(st,s.t);}
+const speakLine=st=>`${st.hero.id} doesn't like ${PL[st.no]}.`;
+function sentHTML(st,s,i){
+  if(s.choice){const q=fill(st,s.choice);if(st.guest)return `${q} <b>${GUESTS[st.guest]} ${st.guest}!</b>`;if(i===st.i)return `${q}<span class="cbtns">${Object.keys(GUESTS).map(g=>`<button class="cbtn" data-g="${g}"><span>${GUESTS[g]}</span>${g}</button>`).join('')}</span>`;return q;}
+  if(s.out)return st.guest?fill(st,s.out[st.guest].t):'…';
+  const w=words(st);
+  return s.t.replace(/\{H\}/g,st.hero.id).replace(/\{(\d)t\}/g,(m,n)=>PL[w[n]]).replace(/\{(\d)\}/g,(m,n)=>{
+    if(st.filled[n])return `<span class="gap filled"><i>${W[w[n]]}</i>${PL[w[n]]}</span>`;
+    return `<span class="gap ${i===st.i?'cur':''}" ${i===st.i?'id="curGap"':''}></span>`;});
+}
+function sceneHTML(st){
+  const w=words(st),fx=st.fx||{},j=st.justFx;
+  const items=[{e:st.hero.e,x:16,y:58,cls:'hero'+(fx.party?' bounce':'')}];
+  if(st.filled[1]){if(fx.hat)items.push({e:W[w[1]],x:16,y:36,cls:'hat'+(j==='hat'?' hatmove':''),style:`--dx:28cqw;--dy:6.9cqw`});else items.push({e:W[w[1]],x:44,y:48,cls:st.justFilled==1?'pop':''});}
+  if(st.filled[2])items.push({e:W[w[2]],x:60,y:48,cls:st.justFilled==2?'pop':''});
+  const gone=fx.crunch||fx.whoosh;
+  if(st.filled[3]&&(!gone||j==='crunch'||j==='whoosh'))items.push({e:W[w[3]],x:89,y:80,cls:j==='crunch'?'crunch':j==='whoosh'?'fly':st.justFilled==3?'pop':''});
+  if(st.guest)items.push({e:GUESTS[st.guest],x:74,y:66,cls:'guest'+(j==='guest'?' pop':'')+(fx.party?' bounce':'')});
+  if(fx.party)items.push({e:'🎉',x:32,y:26,cls:j==='party'?'pop':''},{e:'🎈',x:62,y:24,cls:j==='party'?'pop':''});
+  const bt={crunch:['CRUNCH!',84,62],whoosh:['WHOOSH!',82,40],hat:['WHOOSH!',32,22]}[j];
+  return `<div class="stall"><div class="st-awning"></div><div class="st-sign">The market</div><div class="st-basket"><span>🙁 No, thank you</span></div><div class="st-table"><i class="l"></i><i class="r"></i></div><div class="st-floor"></div>
+  ${items.map(it=>`<div class="item ${it.cls}" style="left:${it.x}%;top:${it.y}%;${it.style||''}">${it.e}</div>`).join('')}${bt?`<div class="btxt" style="left:${bt[1]}%;top:${bt[2]}%">${bt[0]}</div>`:''}</div>`;
+}
+
+/* screens */
+function homeHTML(){
+  return `<div class="scr purple">
+  <div class="hud-r"><span class="icon">${SHOP}</span><span class="icon">${STAR}<b>${S.stars}</b></span><span class="icon">${HEART}</span><span class="who"><span class="nm">Mia</span><span class="av"></span></span></div>
+  <div class="mcards">
+    <div class="nb mcard hot"><div class="m-top"><span class="tag pd">Story time</span><span class="newb">New</span></div>
+      <div class="m-img">📖</div><div class="m-title">Make a story with Pandy</div><div class="m-sub">With your words: food and harvest</div>
+      <button class="btn" id="play">Play</button></div>
+    <div class="nb mcard"><div class="m-top"><span class="tag hw">Homework</span></div><div class="m-img"><div class="ph">character<br>art</div></div><div class="m-title">Finish your homework</div><div class="done-lbl"><i>${CHECK}</i>Completed</div></div>
+    <div class="nb mcard"><div class="m-top"><span class="tag gm">Games</span></div><div class="m-img"><div class="ph">character<br>art</div></div><div class="m-title">Play a game</div><div class="done-lbl"><i>${CHECK}</i>Completed</div></div>
+  </div>
+  <div class="shelf"><span>My stories:</span>${S.stories.length?S.stories.map(s=>`<span class="bk" title="${s.title}">${s.hero.e}</span>`).join(''):'<span style="opacity:.7">none yet</span>'}</div></div>`;
+}
+function chooseHTML(){
+  const p=S.pick,H=p.hero?p.hero.id:'Your hero';
+  const prompts=['Who is the hero of your story?',`What does ${H} like? Pick two.`,`What doesn't ${H} like? Pick one.`];
+  let choices='';
+  if(p.step===0)choices=HEROES.map(h=>`<button class="ch ${p.hero&&p.hero.id===h.id?'sel':''}" data-h="${h.id}"><span class="em">${h.e}</span><b>${h.id}</b></button>`).join('');
+  else choices=BANK.map(w=>{
+    const isL=p.likes.includes(w),isN=p.no===w;
+    const dis=p.step===2&&isL;
+    return `<button class="ch ${isL?'sel':''} ${isN?'sel no':''}" data-w="${w}" ${dis?'disabled':''} aria-label="${w}"><span class="em">${W[w]}</span><b>${w}</b></button>`;}).join('');
+  const l=p.likes.map(w=>`<mark>${PL[w]}</mark>`),likeTxt=l.length===2?`${l[0]} and ${l[1]}`:l.length===1?`${l[0]} and <em>…</em>`:'<em>…</em>';
+  const prev=p.hero?`<span class="hero">${p.hero.e}</span><p>${p.hero.id} likes ${likeTxt}.<br>${p.hero.id} doesn't like ${p.no?`<mark>${PL[p.no]}</mark>`:'<em>…</em>'}.</p>`:'<p><em>Your story starts here.</em></p>';
+  const ready=[!!p.hero,p.likes.length===2,!!p.no][p.step];
+  const label=['Next','Next','Write my story'][p.step];
+  return `<div class="scr lilac"><button class="back" id="close" aria-label="Back">${CHEV}</button>
+  <div class="h1">Make a story with Pandy</div>
+  <div class="steps">${['Hero','Likes','Doesn\'t like'].map((t,i)=>`<span class="${i===p.step?'on':i<p.step?'done':''}">${i+1} · ${t}</span>`).join('')}</div>
+  <div class="ask"><div class="pandy">Pandy</div><div class="bubble">${prompts[p.step]}<small>${p.step?'Only words from your lessons and homework. Tap to hear.':'Tap a hero.'}</small></div><button class="spk-btn" id="listen" aria-label="Hear it">${SPK2}</button></div>
+  <div class="choices">${choices}</div>
+  <div class="preview">${prev}</div>
+  <button class="answer" id="next" ${ready?'':'disabled'}>${label}</button></div>`;
+}
+function writingHTML(){return `<div class="scr burst"><div class="writing"><div class="book">📖</div><b>Pandy is writing your story…</b><small>Picking a story for your words and your level</small></div></div>`;}
+function storyHTML(){
+  const st=S.story,s=st.sents[st.i],gapN=s&&s.g;
+  const used=n=>Object.keys(st.filled).some(k=>words(st)[k]===n);
+  let right='';
+  right=st.sents.map((x,i)=>`<p class="sent ${i<st.i?'read':''} ${i===st.i&&st.phase==='read'?'cur':''} ${st.phase!=='read'?'read':''}" ${i>st.i&&st.phase==='read'?'style="opacity:.25"':''}>${sentHTML(st,x,st.phase==='read'?i:-1)}</p>`).join('');
+  if(st.phase==='quiz')right+=`<div class="quiz"><h5>What doesn't ${st.hero.id} like?</h5><div class="row">${st.qopts.map(w=>`<button class="qopt ${st.qmark&&st.qsel===w?st.qmark:''}" data-w="${w}" aria-label="${w}">${W[w]}</button>`).join('')}</div></div>`;
+  if(st.phase==='speak')right+=`<div class="quiz speak"><button class="mic ${st.rec?'on':''}" id="mic" aria-label="Record">${MIC}</button><p>${st.rec==='done'?'Great reading! 🎉':'Now you! Read the last line with Pandy.'}<small>“${speakLine(st)}”${st.rec==='done'?'':' · uses the existing speech recognition (simulated here)'}</small></p></div>`;
+  let help;
+  if(st.phase==='read'&&s&&s.choice&&!st.guest)help=`<div class="bubble">You choose! Tap one.<small>Each choice has its own ending.</small></div>`;
+  else if(st.phase==='read'&&gapN){const fb=st.fb;help=`<div class="bubble">Listen and put the right picture in the gap.${fb?`<small class="fb ${fb.bad?'bad':'good'}">${fb.text}</small>`:'<small>Drag it or tap it.</small>'}</div>`;}
+  else if(st.phase==='read'&&!help)help=`<div class="bubble">Listen to Pandy…<small>The story reads itself aloud.</small></div>`;
+  else if(st.phase==='quiz')help=`<div class="bubble">One question about the story.</div>`;
+  else help=`<div class="bubble">Say it out loud!</div>`;
+  return `<div class="scr purple"><button class="back" id="close" aria-label="Back">${CHEV}</button>
+  <div class="s-title">${st.title}</div>
+  <div class="page l"><div class="illu" id="illu">${sceneHTML(st)}</div>
+    <div class="s-tray">${st.tray.map(w=>`<button class="stk ${used(w)?'used':''} ${st.hintW===w?'hint':''}" data-w="${w}" aria-label="${w}">${W[w]}</button>`).join('')}</div>
+    <div class="s-help"><div class="pandy">Pandy</div>${help}<button class="spk-btn" id="listen" aria-label="Hear it again">${SPK2}</button></div></div>
+  <div class="page r" id="text">${right}</div></div>`;
+}
+function endHTML(){
+  const st=S.story;
+  return `<div class="scr burst"><button class="back" id="close" aria-label="Back to Kids Area">${CHEV}</button>
+  <div class="e-stars"><b>+${st.gain}</b>${STAR}</div>
+  <div class="e-title">THE END!</div>
+  <div class="cover"><div class="illu">${sceneHTML(st)}</div><h3>${st.title}</h3><small>by Mia and Pandy · story ${S.stories.length} in your bookshelf</small></div>
+  <div class="e-acts">
+    <button class="btn alt" id="again">Read it again</button>
+    <button class="btn purple" id="tutor">Talk to Pandy about ${st.hero.id}</button>
+    <button class="btn" id="another">Make another story</button>
+    <button class="btn alt" id="parent">Show grown-ups</button>
+    <button class="lnk" id="how">How the story is made, and the Learning Engine loop →</button>
+  </div></div>`;
+}
+
+/* flow */
+function go(s){S.screen=s;render();}
+function render(){
+  closeModal();document.querySelectorAll('.cf,.toast').forEach(e=>e.remove());
+  const v=$('#view'),b=(id,fn)=>{const el=document.getElementById(id);if(el)el.onclick=fn;};
+  if(S.screen==='home'){v.innerHTML=homeHTML();b('play',startChoose);}
+  else if(S.screen==='choose'){v.innerHTML=chooseHTML();const p=S.pick;
+    b('close',()=>{clearT();go('home');});b('listen',()=>say(promptText()));
+    b('next',()=>{if(p.step<2){p.step++;render();later(()=>say(promptText()),250);}else writeStory();});
+    document.querySelectorAll('.ch').forEach(c=>c.onclick=()=>{
+      if(c.dataset.h){p.hero=HEROES.find(h=>h.id===c.dataset.h);say(p.hero.id);}
+      else{const w=c.dataset.w;
+        if(p.step===1){if(p.likes.includes(w))p.likes=p.likes.filter(x=>x!==w);else if(p.likes.length<2)p.likes.push(w);else{p.likes.shift();p.likes.push(w);}say(p.likes.includes(w)?`${p.hero.id} likes ${PL[w]}`:w);}
+        else{p.no=w;say(`${p.hero.id} doesn't like ${PL[w]}`);}}
+      render();});
+  }
+  else if(S.screen==='writing'){v.innerHTML=writingHTML();}
+  else if(S.screen==='story'){v.innerHTML=storyHTML();const st=S.story;
+    b('close',()=>{clearT();go('home');});b('listen',()=>{const s=st.sents[st.i];if(st.phase==='read'&&s)say(plain(st,s));else if(st.phase==='quiz')say(`What doesn't ${st.hero.id} like?`);else say(speakLine(st));});
+    document.querySelectorAll('.stk').forEach(el=>el.addEventListener('pointerdown',onDown));
+    document.querySelectorAll('.qopt').forEach(q=>q.onclick=()=>answerQuiz(q.dataset.w));
+    b('mic',record);
+    document.querySelectorAll('.cbtn').forEach(x=>x.onclick=()=>choose(x.dataset.g));
+  }
+  else if(S.screen==='end'){v.innerHTML=endHTML();
+    b('close',()=>{clearT();go('home');});
+    b('again',readAll);b('another',startChoose);b('parent',()=>openModal(parentHTML()));b('how',()=>openModal(howHTML()));
+    b('tutor',()=>toast(`Opens AI Tutor with "${S.story.title}" as the topic`));
+  }
+  renderNotes();
+}
+function promptText(){const p=S.pick,H=p.hero?p.hero.id:'your hero';return['Who is the hero of your story?',`What does ${H} like? Pick two.`,`What doesn't ${H} like? Pick one.`][p.step];}
+function startChoose(){clearT();S.pick={hero:null,likes:[],no:null,step:0};S.screen='choose';render();later(()=>say(promptText()),300);}
+function writeStory(){
+  const p=S.pick,last=S.story?S.story.tpl:-1,tpl=last===0?1:last===1?0:Math.floor(Math.random()*2);
+  const distract=shuffle(BANK.filter(w=>!p.likes.includes(w)&&w!==p.no))[0];
+  S.story={hero:p.hero,likes:[...p.likes],no:p.no,tpl,sents:TEMPLATES[tpl].sents,i:0,filled:{},fx:{},guest:null,phase:'read',tray:shuffle([...p.likes,p.no,distract]),errs:0,score:0,gain:0,fb:null,hintW:null,justFilled:null,justFx:null};
+  S.story.title=fill(S.story,TEMPLATES[tpl].title);
+  S.events=[{t:'choice',hero:p.hero.id,likes:[...p.likes],no:p.no}];
+  go('writing');later(()=>{go('story');advance();},1700);
+}
+function advance(){
+  const st=S.story,s=st.sents[st.i];
+  if(!s){st.phase='quiz';st.qopts=shuffle([...st.likes,st.no]);render();later(()=>say(`What doesn't ${st.hero.id} like?`),300);return;}
+  render();
+  if(s.choice){later(()=>say(fill(st,s.choice)),350);return;}
+  if(s.g){later(()=>say(plain(st,s)),350);return;}
+  const t=plain(st,s),fx=s.out?s.out[st.guest].fx:s.fx;
+  later(()=>say(t),350);
+  if(fx)later(()=>doFx(fx),s.out?1500:700);
+  later(()=>{st.i++;advance();},dur(t)+(fx?1100:350));
+}
+function doFx(fx){const st=S.story;if(S.screen!=='story')return;st.fx[fx]=true;st.justFx=fx;tone(fx==='party'?'fanfare':fx==='crunch'?'crunch':'whoosh');render();st.justFx=null;}
+function choose(g){const st=S.story;if(st.guest)return;st.guest=g;st.justFx='guest';S.events.push({t:'guest',guest:g});tone('ok');say(g+'!');render();st.justFx=null;later(()=>{st.i++;advance();},1000);}
+function tryFill(w){
+  const st=S.story,s=st.sents[st.i];if(!s||!s.g||st.phase!=='read'||st.filled[s.g])return;
+  const need=words(st)[s.g];
+  if(w!==need){st.errs++;tone('bad');S.events.push({t:'gap',need,got:w,ok:false});st.fb={bad:true,text:`That's ${PL[w]}. Listen again!`};if(st.errs>=2)st.hintW=need;render();const el=document.querySelector(`.stk[data-w="${w}"]`);if(el)el.classList.add('bad');later(()=>say(plain(st,s)),400);return;}
+  st.filled[s.g]=true;st.justFilled=s.g;st.score+=st.errs?10:20;S.events.push({t:'gap',need,ok:true,errs:st.errs});
+  st.errs=0;st.hintW=null;st.fb=null;tone('ok');
+  const t=plain(st,s);render();say(t);st.justFilled=null;
+  later(()=>{st.i++;advance();},dur(t)+200);
+}
+function answerQuiz(w){
+  const st=S.story;if(st.qmark==='ok')return;st.qsel=w;
+  if(w===st.no){st.qmark='ok';st.score+=10;tone('ok');S.events.push({t:'quiz',ok:true});say(`Yes! ${st.hero.id} doesn't like ${PL[st.no]}.`);render();later(()=>{st.phase='speak';render();say(speakLine(st));},2000);}
+  else{st.qmark='bad';tone('bad');S.events.push({t:'quiz',ok:false,got:w});render();say('Not quite. Try again!');later(()=>{st.qmark=null;render();},700);}
+}
+function record(){
+  const st=S.story;if(st.rec)return;st.rec='on';render();
+  later(()=>{st.rec='done';tone('ok');S.events.push({t:'speak',ok:true});render();
+    later(()=>{st.gain=st.score+10;S.stars+=st.gain;S.stories.push({hero:st.hero,title:st.title});tone('fanfare');go('end');confetti();later(()=>say(`The end! Well done, Mia!`),300);},1400);},1800);
+}
+function readAll(){const st=S.story;say(st.sents.map(s=>plain(st,s)).filter(Boolean).join(' '));}
+
+/* drag */
+function onDown(e){const el=e.currentTarget;pend={w:el.dataset.w,el,x0:e.clientX,y0:e.clientY,g:null};addEventListener('pointermove',onMove);addEventListener('pointerup',onUp);addEventListener('pointercancel',onCancel);e.preventDefault();}
+function cleanup(){removeEventListener('pointermove',onMove);removeEventListener('pointerup',onUp);removeEventListener('pointercancel',onCancel);}
+function onCancel(){cleanup();if(pend&&pend.g){pend.g.remove();pend.el.classList.remove('lifting');}pend=null;}
+function onMove(e){if(!pend)return;if(!pend.g){if(Math.hypot(e.clientX-pend.x0,e.clientY-pend.y0)<6)return;const g=document.createElement('div');g.className='ghost';g.textContent=W[pend.w];g.style.fontSize=(60*scale)+'px';document.body.appendChild(g);pend.g=g;pend.el.classList.add('lifting');}pend.g.style.left=e.clientX+'px';pend.g.style.top=e.clientY+'px';}
+function onUp(e){cleanup();const p=pend;pend=null;if(!p)return;
+  if(!p.g){tryFill(p.w);return;}
+  p.g.remove();p.el.classList.remove('lifting');
+  const gap=$('#curGap');if(!gap)return;const r=gap.getBoundingClientRect(),pad=40*scale;
+  if(e.clientX>=r.left-pad&&e.clientX<=r.right+pad&&e.clientY>=r.top-pad&&e.clientY<=r.bottom+pad)tryFill(p.w);
+}
+
+/* modals */
+function openModal(h){closeModal();const bg=document.createElement('div');bg.className='modal-bg';bg.id='modal';bg.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><button class="btn alt x" id="mClose">Close</button>${h}</div>`;$('#stage').appendChild(bg);bg.onclick=e=>{if(e.target===bg)closeModal();};$('#mClose').onclick=closeModal;$('#mClose').focus();}
+function closeModal(){const m=$('#modal');if(m)m.remove();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+function parentHTML(){
+  const st=S.story,g=S.events.filter(e=>e.t==='gap'),ok=g.filter(e=>e.ok&&!e.errs).length;
+  return `<h3>For grown-ups</h3><p class="sub">Mia made a story with Pandy</p>
+  <div class="pm-grid"><div class="illu">${sceneHTML(st)}</div><div class="pm-facts">
+  <div><b>The story</b><span>${st.sents.filter(x=>!x.choice).map(x=>plain(st,x)).filter(Boolean).join(' ')}</span></div>${st.guest?`<div><b>Mia chose</b><span>${st.guest} for the ending</span></div>`:''}
+  <div><b>Words used</b><span>${[...st.likes,st.no].map(w=>PL[w]).join(', ')}</span></div>
+  <div><b>Listening</b><span>${ok} of 3 gaps right the first time; the story question answered</span></div>
+  <div><b>Speaking</b><span>Read one sentence aloud: “${speakLine(st)}”</span></div>
+  <div><b>Next lesson</b><span>Anna can ask Mia to retell the story.</span></div></div></div>`;
+}
+function howHTML(){
+  const ev=S.events;
+  const lines=ev.map(e=>e.t==='guest'?`<li>chose ${e.guest} for the ending</li>`:e.t==='choice'?`<li>chose ${e.hero}; likes: ${e.likes.join(', ')}; doesn't like: ${e.no}</li>`:e.t==='gap'?(e.ok?`<li>gap "${e.need}": right${e.errs?` after ${e.errs} error${e.errs>1?'s':''}`:', first try'}</li>`:`<li class="err">gap "${e.need}": picked ${e.got}</li>`):e.t==='quiz'?`<li class="${e.ok?'':'err'}">story question: ${e.ok?'right':'picked '+e.got}</li>`:`<li>read a sentence aloud</li>`).join('');
+  return `<h3>How a story is made</h3><p class="sub">No live AI text or images reach the child in the MVP</p>
+  <div class="flow">
+   <div><b>1 · Generate offline</b>An LLM writes plot templates per unit and level: a goal, an “Oh no!”, a choice for the child, two funny endings. Rules in the prompt: only the unit's words, the target grammar (here: like / doesn't like), a sentence length cap.</div>
+   <div><b>2 · Check automatically</b>Every word against the level's word list, sentence length, a child-safety filter. Templates that fail go back to step 1.</div>
+   <div><b>3 · Review and play-test</b>A methodologist approves the language and the fun: is there a joke, a surprise, a real choice? New sets are play-tested with a few children first.</div>
+   <div class="live"><b>4 · In the app</b>The child's hero and words fill the slots of an approved template. The picture is built from approved sticker art. No image generation.</div>
+  </div>
+  <div class="cols">
+   <div><h5>Reads from the Learning Engine</h5><ul><li>Word bank: words met in lessons and homework</li><li>Level: picture gaps for pre-readers, word tiles at level 2+, typing at level 3+</li><li>Errors from the last lesson: those words are offered first</li></ul></div>
+   <div><h5>Writes back (this session)</h5><ul>${lines||'<li>Make a story to see your own data here.</li>'}</ul></div>
+   <div><h5>Later, and without the engine</h5><ul><li>Phase 2: live generation with the same checks, falling back to the library if a check fails</li><li>Without the engine: word bank = the current unit's homework words</li><li>AI Tutor: “Talk to Pandy” starts a chat on the same story</li><li>Boring templates are cut by data: the share of children who tap “Make another story”</li></ul></div>
+  </div>`;
+}
+function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;$('#stage').appendChild(el);setTimeout(()=>el.remove(),2700);}
+function confetti(){const st=$('#stage'),c=['#f9cf3a','#7dd35f','#d65ce6','#4f9bf5','#f07f2e'];for(let i=0;i<70;i++){const d=document.createElement('div');d.className='cf';d.style.left=Math.random()*100+'%';d.style.background=c[i%5];d.style.animationDelay=Math.random()*.6+'s';st.appendChild(d);setTimeout(()=>d.remove(),3400);}}
+
+/* notes */
+const NOTES={
+  home:{t:'Alternative concept: Story time',b:[
+    'A new Kids Area activity, next to the existing missions. The main recommendation is Word Stickers; this is the bigger bet.',
+    'The child makes a short story with Pandy from their own words: words met in lessons and homework.',
+    'Replay comes from new combinations: another hero, other words, another template. Stories collect on a bookshelf.',
+    'Tap <b>Play</b>.']},
+  choose:{t:'The child chooses, in English',b:[
+    'Hero, two things the hero likes, one thing the hero doesn\'t. Every tap says the sentence aloud: "Fox likes apples".',
+    'The choice is already practice of the unit grammar, and it makes the story the child\'s own.',
+    'The word bank only shows words the child has met. Words with recent errors would come first.']},
+  writing:{t:'"Pandy is writing"',b:[
+    'In the MVP this picks an approved template and fills it with the child\'s choices. No live AI text reaches the child.',
+    'The full pipeline is in "How the story is made" on the last screen.']},
+  story:{t:'Read along, fill the gaps',b:[
+    'Every story has a plot: a goal, an "Oh no!", a choice the child makes, and a funny ending (Crunch! Whoosh!). The word the hero doesn\'t like becomes the joke.',
+    'Pandy reads each sentence aloud; the current one is highlighted. Pre-readers follow by ear.',
+    'At a gap, the child hears the full sentence and puts the right picture in. A fourth sticker is a distractor.',
+    'Two errors: the right sticker wiggles. Every answer is logged per word.',
+    'The picture on the left builds itself from approved sticker art as the gaps fill.',
+    'Then one question about the story and one sentence read aloud (the speech recognition from homework).']},
+  end:{t:'The end: a book to keep',b:[
+    'Stars at the Kids Area scale: more for first-try gaps.',
+    'Each template has two endings, so replay is driven by curiosity: "what if Bird comes?"',
+    '<b>Talk to Pandy</b> hands the story to AI Tutor as the topic. That is the bet on AI Tutor retention (30% → 36%).',
+    'The parent card shows the whole story, the words used and the spoken sentence.',
+    'Risks compared with Word Stickers: more content work per unit, reading load at level 0–1, speech recognition quality for young children.']}
+};
+function renderNotes(){
+  const k=S.screen,d=NOTES[k];const n=$('#notes');
+  n.innerHTML=`<div class="n-k">Reviewer notes · this screen</div><h4>${d.t}</h4><ul>${d.b.map(x=>`<li>${x}</li>`).join('')}</ul>
+  <div class="n-k">Jump to</div><div class="jumps">${[['home','Kids Area home'],['choose','Choose'],['story','Story'],['end','The end']].map(([j,l])=>`<button data-j="${j}" class="${k===j||(k==='writing'&&j==='choose')?'on':''}">${l}</button>`).join('')}</div>
+  <p class="n-foot">Character art from the live app is not redrawn: dashed circles mark where Pandy, the avatar and mission art go. Emoji stand in for stickers and heroes. The voice uses the browser's text-to-speech.</p>`;
+  n.querySelectorAll('[data-j]').forEach(x=>x.onclick=()=>jump(x.dataset.j));
+}
+function jump(k){
+  clearT();S=fresh();
+  if(k==='home')go('home');
+  else if(k==='choose')startChoose();
+  else{S.pick={hero:HEROES[0],likes:['apple','corn'],no:'carrot',step:2};
+    if(k==='story'){writeStory();}
+    else{const p=S.pick;S.story={hero:p.hero,likes:p.likes,no:p.no,tpl:0,sents:TEMPLATES[0].sents,i:7,filled:{1:true,2:true,3:true},fx:{crunch:true,party:true},guest:'Bunny',phase:'done',tray:[],gain:70};S.story.title=fill(S.story,TEMPLATES[0].title);S.events=[{t:'choice',hero:'Fox',likes:p.likes,no:p.no},{t:'gap',need:'apple',ok:true,errs:0},{t:'gap',need:'corn',ok:false,got:'pear'},{t:'gap',need:'corn',ok:true,errs:1},{t:'gap',need:'carrot',ok:true,errs:0},{t:'guest',guest:'Bunny'},{t:'quiz',ok:true},{t:'speak',ok:true}];S.stars=980;S.stories=[{hero:p.hero,title:S.story.title}];go('end');}
+  }
+}
+function fit(){const wrap=$('#stageWrap'),narrow=innerWidth<900,r=wrap.getBoundingClientRect();let s=narrow?(r.width-16)/1280:Math.min((r.width-32)/1280,(r.height-32)/720);s=Math.max(.2,Math.min(s,1.5));scale=s;const box=$('#stageBox');box.style.width=1280*s+'px';box.style.height=720*s+'px';$('#stage').style.transform=`scale(${s})`;}
+$('#notesBtn').onclick=e=>{const h=$('#notes').classList.toggle('hidden');e.currentTarget.setAttribute('aria-pressed',String(!h));fit();};
+$('#restart').onclick=()=>jump('home');
+addEventListener('resize',fit);try{new ResizeObserver(fit).observe($('#stageWrap'));}catch(e){}
+render();fit();
+</script>
+</body>
+</html>
